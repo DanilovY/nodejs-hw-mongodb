@@ -8,7 +8,7 @@ import { notFoundHandler } from './middlewares/notFoundHandler.js';
 
 export const setupServer = () => {
   const app = express();
-  const PORT = Number(getEnvVar('PORT'));
+  const PORT = Number(getEnvVar('PORT', 3000));
 
   app.use(cors());
   app.use(
@@ -18,6 +18,9 @@ export const setupServer = () => {
       },
     }),
   );
+  app.get('/', (req, res) => {
+    res.json({ message: 'API is running' });
+  });
 
   app.use('/contacts', contactsRouter);
 
