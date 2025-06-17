@@ -34,7 +34,7 @@ export const getContactsController = async (req, res) => {
 
 export const getContactByIdController = async (req, res) => {
   const { contactId } = req.params;
-  const contact = await getContactById(contactId);
+  const contact = await getContactById(contactId, req.user.id);
 
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
@@ -64,7 +64,7 @@ export const createContactController = async (req, res) => {
 export const updateContactController = async (req, res, next) => {
   const { contactId } = req.params;
 
-  const contact = await getContactById(contactId);
+  const contact = await getContactById(contactId, req.user.id);
 
   if (!contact) {
     return next(createHttpError(404, 'Contact not found'));
@@ -76,7 +76,7 @@ export const updateContactController = async (req, res, next) => {
     );
   }
 
-  const updatedContact = await updateContact(contactId, req.body);
+  const updatedContact = await updateContact(contactId, req.user.id, req.body);
 
   res.status(200).json({
     status: 200,
@@ -88,7 +88,7 @@ export const updateContactController = async (req, res, next) => {
 export const deleteContactController = async (req, res, next) => {
   const { contactId } = req.params;
 
-  const contact = await getContactById(contactId);
+  const contact = await getContactById(contactId, req.user.id);
 
   if (!contact) {
     return next(createHttpError(404, 'Contact not found'));
@@ -100,7 +100,7 @@ export const deleteContactController = async (req, res, next) => {
     );
   }
 
-  await deleteContact(contactId);
+  await deleteContact(contactId, req.user.id);
 
   res.status(204).send();
 };
@@ -109,7 +109,7 @@ export const deleteContactController = async (req, res, next) => {
 
 export const replaceContsctController = async (req, res, next) => {
   const { contactId } = req.params;
-  const contact = await getContactById(contactId);
+  const contact = await getContactById(contactId, req.user.id);
 
   if (contact && contact.ownerId.toString() !== req.user.id.toString()) {
     return next(
@@ -117,10 +117,14 @@ export const replaceContsctController = async (req, res, next) => {
     );
   }
 
-  const { value, updatedExisting } = await replaceContact(contactId, {
-    ...req.body,
-    ownerId: req.user.id,
-  });
+  const { value, updatedExisting } = await replaceContact(
+    contactId,
+    req.user.id,
+    {
+      ...req.body,
+      ownerId: req.user.id,
+    },
+  );
 
   if (updatedExisting === true) {
     res.status(200).json({

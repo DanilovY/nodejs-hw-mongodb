@@ -39,8 +39,8 @@ export const getAllContacts = async ({
     ...paginationData,
   };
 };
-export const getContactById = async (contactId) => {
-  const contact = await ContactsCollection.findById(contactId);
+export const getContactById = async (contactId, ownerId) => {
+  const contact = await ContactsCollection.findOne({ _id: contactId, ownerId });
   return contact;
 };
 
@@ -49,9 +49,9 @@ export const createContact = async (payload) => {
   return contact;
 };
 
-export const updateContact = async (contactId, payload) => {
-  const contact = await ContactsCollection.findByIdAndUpdate(
-    contactId,
+export const updateContact = async (contactId, ownerId, payload) => {
+  const contact = await ContactsCollection.findOneAndUpdate(
+    { _id: contactId, ownerId },
     payload,
     {
       new: true,
@@ -60,21 +60,29 @@ export const updateContact = async (contactId, payload) => {
   return contact;
 };
 
-export const deleteContact = async (contactId) => {
-  const contact = await ContactsCollection.findByIdAndDelete(contactId);
+export const deleteContact = async (contactId, ownerId) => {
+  const contact = await ContactsCollection.findOneAndDelete({
+    _id: contactId,
+    ownerId,
+  });
   return contact;
 };
 
 //----------------------------------------put--------------------------------------//
 
-export const replaceContact = async (contactId, payload) => {
-  const contact = await ContactsCollection.findByIdAndUpdate(
-    contactId,
+export const replaceContact = async (contactId, ownerId, payload) => {
+  const contactBefore = await ContactsCollection.findOne({
+    _id: contactId,
+    ownerId,
+  });
+
+  const contact = await ContactsCollection.findOneAndUpdate(
+    { _id: contactId, ownerId },
     payload,
-    { new: true, upsert: true, includeResultMetadata: true },
+    { new: true, upsert: true },
   );
   return {
-    value: contact.value,
-    updatedExisting: contact.lastErrorObject.updatedExisting,
+    value: contact,
+    updatedExisting: Boolean(contactBefore),
   };
 };
