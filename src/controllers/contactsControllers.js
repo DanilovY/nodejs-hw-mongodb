@@ -22,6 +22,7 @@ export const getContactsController = async (req, res) => {
     sortBy,
     sortOrder,
     filter,
+    ownerId: req.user.id,
   });
 
   res.json({
@@ -38,6 +39,11 @@ export const getContactByIdController = async (req, res) => {
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
+
+  if (contact.ownerId.toString() !== req.user.id.toString()) {
+    throw createHttpError.NotFound('Student not found');
+  }
+
   res.json({
     status: 200,
     message: `Successfully found contact with id: ${contactId}!`,
@@ -46,7 +52,7 @@ export const getContactByIdController = async (req, res) => {
 };
 
 export const createContactController = async (req, res) => {
-  const contact = await createContact(req.body);
+  const contact = await createContact({ ...req.body, ownerId: req.user.id });
 
   res.status(201).json({
     status: 201,
@@ -57,47 +63,76 @@ export const createContactController = async (req, res) => {
 
 export const updateContactController = async (req, res, next) => {
   const { contactId } = req.params;
-  const contact = await updateContact(contactId, req.body);
+
+  const contact = await getContactById(contactId);
 
   if (!contact) {
-    next(createHttpError(404, ' Student not found'));
+    return next(createHttpError(404, 'Contact not found'));
   }
+
+  if (contact.ownerId.toString() !== req.user.id.toString()) {
+    return next(
+      createHttpError(403, 'You are not allowed to update this contact'),
+    );
+  }
+
+  const updatedContact = await updateContact(contactId, req.body);
 
   res.status(200).json({
     status: 200,
     message: 'Successfully patched a contact!',
-    data: contact,
+    data: updatedContact,
   });
 };
 
 export const deleteContactController = async (req, res, next) => {
   const { contactId } = req.params;
-  const contact = await deleteContact(contactId);
+
+  const contact = await getContactById(contactId);
 
   if (!contact) {
-    next(createHttpError(404, 'Contact not found'));
+    return next(createHttpError(404, 'Contact not found'));
   }
+
+  if (contact.ownerId.toString() !== req.user.id.toString()) {
+    return next(
+      createHttpError(403, 'You are not allowed to delete this contact'),
+    );
+  }
+
+  await deleteContact(contactId);
 
   res.status(204).send();
 };
 
 //---------------------------------------put---------------------------------------//
 
-export const replaceContsctController = async (req, res) => {
+export const replaceContsctController = async (req, res, next) => {
   const { contactId } = req.params;
-  const { value, updatedExisting } = await replaceContact(contactId, req.body);
+  const contact = await getContactById(contactId);
+
+  if (contact && contact.ownerId.toString() !== req.user.id.toString()) {
+    return next(
+      createHttpError(403, 'You are not allowed to replace this contact'),
+    );
+  }
+
+  const { value, updatedExisting } = await replaceContact(contactId, {
+    ...req.body,
+    ownerId: req.user.id,
+  });
 
   if (updatedExisting === true) {
     res.status(200).json({
       status: 200,
-      message: 'Student updated successfully',
+      message: 'Contact updated successfully',
       data: value,
     });
   }
 
   res.status(201).json({
     status: 201,
-    message: `Successfully upserted a student!`,
+    message: `Successfully upserted a contact!`,
     data: value,
   });
 };

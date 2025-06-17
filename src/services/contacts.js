@@ -7,11 +7,13 @@ export const getAllContacts = async ({
   sortBy,
   sortOrder,
   filter,
+  ownerId,
 }) => {
   const limit = perPage;
   const skip = (page - 1) * perPage;
 
   const contactsQery = ContactsCollection.find();
+  contactsQery.where('ownerId').equals(ownerId);
 
   if (filter.type) {
     contactsQery.where('contactType').equals(filter.type);
