@@ -10,6 +10,10 @@ import createHttpError from 'http-errors';
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
+import { getEnvVar } from '../utils/getEnvVar.js';
+import * as fs from 'node:fs/promises';
+import path from 'node:path';
+import { uploadCloudinary } from '../utils/saveFileToCloudinary.js';
 
 export const getContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
@@ -52,7 +56,26 @@ export const getContactByIdController = async (req, res) => {
 };
 
 export const createContactController = async (req, res) => {
-  const contact = await createContact({ ...req.body, ownerId: req.user.id });
+  let avatar = null;
+
+  if (getEnvVar('UPLOAD-CLOUDINARY') === 'true') {
+    const result = await uploadCloudinary(req.file.path);
+    await fs.unlink(req.file.path);
+
+    avatar = result.secure_url;
+  } else {
+    await fs.rename(
+      req.file.path,
+      path.resolve('src', 'uploads', 'avatars', req.file.filename),
+    );
+    avatar = `http://localhost:3000/avatars/${req.file.filename}`;
+  }
+
+  const contact = await createContact({
+    ...req.body,
+    ownerId: req.user.id,
+    avatar,
+  });
 
   res.status(201).json({
     status: 201,
