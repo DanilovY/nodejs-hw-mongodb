@@ -99,7 +99,25 @@ export const updateContactController = async (req, res, next) => {
     );
   }
 
-  const updatedContact = await updateContact(contactId, req.user.id, req.body);
+  let avatar = contact.avatar;
+  if (req.file) {
+    if (getEnvVar('UPLOAD-CLOUDINARY') === 'true') {
+      const result = await uploadCloudinary(req.file.path);
+      await fs.unlink(req.file.path);
+      avatar = result.secure_url;
+    } else {
+      await fs.rename(
+        req.file.path,
+        path.resolve('src', 'uploads', 'avatars', req.file.filename),
+      );
+      avatar = `http://localhost:3000/avatars/${req.file.filename}`;
+    }
+  }
+
+  const updatedContact = await updateContact(contactId, req.user.id, {
+    ...req.body,
+    avatar,
+  });
 
   res.status(200).json({
     status: 200,

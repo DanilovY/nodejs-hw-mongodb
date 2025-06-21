@@ -37,6 +37,7 @@ router.post(
 router.patch(
   '/:contactId',
   jsonParser,
+  upload.single('avatar'),
   isValidId,
   validateBody(updateContactSchema),
   ctrlWrapper(updateContactController),
