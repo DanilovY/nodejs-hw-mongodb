@@ -56,25 +56,25 @@ export const getContactByIdController = async (req, res) => {
 };
 
 export const createContactController = async (req, res) => {
-  let avatar = null;
+  let photo = null;
 
   if (getEnvVar('UPLOAD-CLOUDINARY') === 'true') {
     const result = await uploadCloudinary(req.file.path);
     await fs.unlink(req.file.path);
 
-    avatar = result.secure_url;
+    photo = result.secure_url;
   } else {
     await fs.rename(
       req.file.path,
-      path.resolve('src', 'uploads', 'avatars', req.file.filename),
+      path.resolve('src', 'uploads', 'photos', req.file.filename),
     );
-    avatar = `http://localhost:3000/avatars/${req.file.filename}`;
+    photo = `http://localhost:3000/photos/${req.file.filename}`;
   }
 
   const contact = await createContact({
     ...req.body,
     ownerId: req.user.id,
-    avatar,
+    photo,
   });
 
   res.status(201).json({
@@ -99,24 +99,24 @@ export const updateContactController = async (req, res, next) => {
     );
   }
 
-  let avatar = contact.avatar;
+  let photo = contact.photo;
   if (req.file) {
     if (getEnvVar('UPLOAD-CLOUDINARY') === 'true') {
       const result = await uploadCloudinary(req.file.path);
       await fs.unlink(req.file.path);
-      avatar = result.secure_url;
+      photo = result.secure_url;
     } else {
       await fs.rename(
         req.file.path,
         path.resolve('src', 'uploads', 'avatars', req.file.filename),
       );
-      avatar = `http://localhost:3000/avatars/${req.file.filename}`;
+      photo = `http://localhost:3000/photos/${req.file.filename}`;
     }
   }
 
   const updatedContact = await updateContact(contactId, req.user.id, {
     ...req.body,
-    avatar,
+    photo,
   });
 
   res.status(200).json({

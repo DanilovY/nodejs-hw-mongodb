@@ -27,7 +27,7 @@ const contactSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
-    avatar: {
+    photo: {
       type: String,
       require: false,
       default: null,

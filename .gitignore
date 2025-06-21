@@ -3,8 +3,8 @@
 /src/tmp/*
 !/src/tmp/.gitkeep
 
-/src/uploads/avatars/*
-!/src/uploads/avatars/.gitkeep
+/src/uploads/photos/*
+!/src/uploads/photos/.gitkeep
 
 .env
 

@@ -139,28 +139,29 @@ export const requestResetToken = async (email) => {
   });
 };
 
-export const resetPassword = async (password, token) => {
+export const resetPassword = async (payload) => {
+  let entries;
+
   try {
-    const decoder = jwt.verify(token, getEnvVar('JWT_SECRET'));
-
-    const user = await UserCollection.findById(decoder.sub);
-
-    if (user === null) throw createHttpError.NotFound('User not found!');
-
-    const hashPassword = await bcrypt.hash(password, 10);
-
-    await UserCollection.findByIdAndUpdate(user._id, {
-      password: hashPassword,
-    });
-  } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      throw new createHttpError.Unauthorized('Token is unauthorized');
-    }
-
-    if (error.name === 'TokenExpiredError') {
-      throw new createHttpError.Unauthorized('Token is expired or invalid.');
-    }
-
-    throw error;
+    entries = jwt.verify(payload.token, getEnvVar('JWT_SECRET'));
+  } catch (err) {
+    if (err instanceof Error) throw createHttpError(401, err.message);
+    throw err;
   }
+
+  const user = await UserCollection.findOne({
+    email: entries.email,
+    _id: entries.sub,
+  });
+
+  if (!user) {
+    throw createHttpError(404, 'User not found');
+  }
+
+  const encryptedPassword = await bcrypt.hash(payload.password, 10);
+
+  await UserCollection.updateOne(
+    { _id: user._id },
+    { password: encryptedPassword },
+  );
 };
