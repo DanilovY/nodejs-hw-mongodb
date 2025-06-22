@@ -1,3 +1,4 @@
+import path from 'node:path';
 import express from 'express';
 import cors from 'cors';
 import pino from 'pino-http';
@@ -10,6 +11,11 @@ import cookieParser from 'cookie-parser';
 export const setupServer = () => {
   const app = express();
   const PORT = Number(getEnvVar('PORT', 3000));
+
+  app.use(
+    '/avatars',
+    express.static(path.resolve('src', 'uploads', 'avatars')),
+  );
 
   app.use(cors());
   app.use(cookieParser());
