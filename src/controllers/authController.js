@@ -1,5 +1,6 @@
 import { ONE_DAY } from '../constants/index.js';
 import {
+  loginOrRegister,
   loginUser,
   logoutUser,
   refreshUsersSession,
@@ -7,6 +8,7 @@ import {
   requestResetToken,
   resetPassword,
 } from '../services/authServis.js';
+import { getOAuthURL, validateCode } from '../utils/googleOauth.js';
 
 export const registerUserController = async (req, res) => {
   const user = await registerUser(req.body);
@@ -94,3 +96,34 @@ export const resetPassworsController = async (req, res) => {
     data: {},
   });
 };
+
+export function getOauthController(req, res) {
+  const url = getOAuthURL();
+
+  res.json({
+    status: 200,
+    message: 'Successfully get url',
+    data: {
+      oauth_url: url,
+    },
+  });
+}
+
+export async function confirmOAuthSchemaController(req, res) {
+  const ticket = await validateCode(req.body.code);
+
+  const session = await loginOrRegister(
+    ticket.payload.email,
+    ticket.payload.name,
+  );
+
+  setupSession(res, session);
+
+  res.json({
+    status: 200,
+    message: 'Login with Google successfully',
+    data: {
+      accessToken: session.accessToken,
+    },
+  });
+}

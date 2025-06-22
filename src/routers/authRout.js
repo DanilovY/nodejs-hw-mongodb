@@ -2,6 +2,7 @@ import { Router } from 'express';
 import express from 'express';
 import { validateBody } from '../middlewares/validateBody.js';
 import {
+  confirmOAuthSchema,
   loginUserSchema,
   registerUserSchema,
   requestResetEmailSchema,
@@ -9,6 +10,8 @@ import {
 } from '../validation/authValidation.js';
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 import {
+  confirmOAuthSchemaController,
+  getOauthController,
   loginUserController,
   logoutUserController,
   refreshUserSessionController,
@@ -50,6 +53,15 @@ router.post(
   jsonParser,
   validateBody(resetPasswordSchema),
   ctrlWrapper(resetPassworsController),
+);
+
+router.get('/get-oauth-url', ctrlWrapper(getOauthController));
+
+router.post(
+  '/confirm-oauth',
+  jsonParser,
+  validateBody(confirmOAuthSchema),
+  ctrlWrapper(confirmOAuthSchemaController),
 );
 
 export default router;
