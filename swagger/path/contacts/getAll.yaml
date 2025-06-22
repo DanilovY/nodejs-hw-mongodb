@@ -29,6 +29,7 @@ parameters:
     required: false
     schema:
       type: string
+      enum: ['name', 'phoneNumber', 'email', 'isFavourite', 'contactType']
       example: contactType
   - name: isFavourite
     in: query
@@ -62,7 +63,38 @@ responses:
               type: string
               example: Successfully found contacts!
             data:
-              $ref: ../../conponents/schemas/contact.yaml
+              type: object
+              required:
+                - data
+                - page
+                - perPage
+                - totalItems
+                - totalPages
+                - hasNextPages
+                - hasPreviousPages
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: ../../conponents/schemas/contact.yaml
+                page:
+                  type: integer
+                  example: 1
+                perPage:
+                  type: integer
+                  example: 10
+                totalPages:
+                  type: integer
+                  example: 5
+                totalItems:
+                  type: integer
+                  example: 50
+                hasNextPages:
+                  type: boolean
+                  example: true
+                hasPreviousPages:
+                  type: boolean
+                  example: false
   '401':
     $ref: ../../conponents/responses/401.yaml
   '500':

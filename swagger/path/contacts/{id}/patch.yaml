@@ -41,7 +41,7 @@ requestBody:
             example: personal
           photo:
             type: string
-            format: url
+            format: binary
             description: Contact photo url
             example: https://res.cloudinary.com/df5xsxnzm/image/upload/v1749232498/jpolliyga4egrctz965w.jpg
 
